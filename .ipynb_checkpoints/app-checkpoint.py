@@ -47,31 +47,62 @@ def preprocess_data(data):
 
     # Calculate the length of the email address
     email_from_length = len(email_from)
+    spam = 'Spam'
+   # df_api = {'Attachment Count': attachment_count,
+    #    'Email Subject': email_subject,
+     #   'TLD_Freq': tld_freq,
+      #  'Email_From_Length':email_from_length}
+    df_api = pd.DataFrame({
+        'Attachment Count': [attachment_count],
+        'Email Subject': [email_subject],
+        'closeNotes':[spam],
+        'Email_From_Length': [email_from_length],
+        'TLD_Freq': [tld_freq]
+    })
+
+    if attachment_count > 0 and attachment_extensions != "":
+        df_new = pd.DataFrame(np.repeat(df_api.values, attachment_count, axis=0))
+        df_new.columns = df_api.columns
+
+    elif attachment_count > 0 and attachment_extensions == "":
+        df_new = df_api
+    else:
+        df_new = df_api
     
-# Explode the 'Attachment Extension' values
+
+
     df_extension = pd.DataFrame({"Attachment Extension": attachment_extensions.split(",")})
-    df_dict = df_extension.to_dict(orient='records')
+    # Create a DataFrame with a single row for the 'Attachment Extension'
+    df_extension = pd.DataFrame({"Attachment Extension": attachment_extensions.split(",")})
+    merged_df = pd.concat([df_new, df_extension], axis=1)
+    # Display the merged DataFrame
+    #print(merged_df)
+    # Apply binary encoding to the 'Attachment Extension'
+    df_encoded = encoder.transform(merged_df)
+    df_encoded = df_encoded[['Attachment Count','Attachment Extension_0','Attachment Extension_1','Attachment Extension_2','Attachment Extension_3','Attachment Extension_4',
+                             'Attachment Extension_5','Attachment Extension_6','Attachment Extension_7','Email Subject','Email_From_Length','TLD_Freq']]
+
+
+
+    print(df_encoded)
+
+#Natural Language Preprocessing for Email Subject
+
+
+
+
+
+
 
 # Return the preprocessed features as a dictionary
     return {
     'Attachment Count': attachment_count,
-    'Attachment Extensions': df_dict,
-    'Email Subject': email_subject,
-    'TLD_Freq': tld_freq,
-    'Email_From_Length': email_from_length
+    'Email Subject': email_subject, # Assuming 'spam' is a predefined value
+    'Email_From_Length': email_from_length,
+    'TLD_Freq': tld_freq
     }
-    #df_extension = df_extension.explode("Attachment Extension")
-     # Apply binary encoding to the exploded extensions
-    #df_encoded_extension = encoder.transform(df_extension)
-     # Print the encoded DataFrame for inspection
-    # Return the preprocessed features
-    return {
-        'Attachment Count': attachment_count,
-        'Attachment Extensions': df_extension,
-        'Email Subject': email_subject,
-        'TLD_Freq': tld_freq,
-        'Email_From_Length': email_from_length
-    }
+
+
 
 @app.route('/preprocess', methods=['POST'])  # Changed route to /preprocess
 def preprocess():
