@@ -169,7 +169,7 @@ def preprocess_data(data):
     # Create a DataFrame with a single row for the 'Attachment Extension'
     merged_df = pd.concat([df_new, df_extension], axis=1)
     # Display the merged DataFrame
-    print(merged_df)
+    #print(merged_df)
     # Apply binary encoding to the 'Attachment Extension'
     df_encoded = encoder.transform(merged_df)
     df_encoded = df_encoded[['Attachment Count','Attachment Extension_0','Attachment Extension_1','Attachment Extension_2','Attachment Extension_3','Attachment Extension_4',
@@ -177,7 +177,7 @@ def preprocess_data(data):
     df = df_encoded
 
 
-    print(df_encoded)
+    #print(df_encoded)
 ####################################################
     #Natural Language Preprocessing for Email Subject
     corpus_subject = df_encoded['Email Subject']
@@ -228,7 +228,7 @@ def preprocess_data(data):
         bigram_get = bigram_relation(frequency_cleaned,i)
         bigrams_cleaned.append(bigram_get)
 
-    print(lematized)
+    #print(lematized)
     #####Corpus Extraction
     size_vector = 100
     context_max = 35
@@ -269,8 +269,18 @@ def preprocess_data(data):
     pd.set_option('display.max_columns', None)
     # Replace 'df' with your DataFrame name
     df_encoded = df_encoded.drop('Email Subject', axis = 1)
-    print(df_encoded)
+    #print(df_encoded)
 
+    # Assuming 'vectors' contains embedding vectors
+    n_components = len(df_encoded['vectors'][0])  # Get the number of components
+    # Create a DataFrame with separate columns for each component
+    embedding_columns = pd.DataFrame(df_encoded['vectors'].tolist(), columns=[f'embedding_component_{i}' for i in range(n_components)])
+    # Concatenate the new columns with the original dataframe
+    df_encoded = pd.concat([df_encoded, embedding_columns], axis=1)
+    # Drop the original 'vectors' column
+    df_encoded.drop(columns=['vectors'], inplace=True)
+    print(df_encoded)
+    print(df.columns.tolist())
 # Return the preprocessed features as a dictionary
     return {
     'Attachment Count': attachment_count,
