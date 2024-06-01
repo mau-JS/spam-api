@@ -267,8 +267,9 @@ def preprocess_data(data):
     #print(df_encoded)
 
     pd.set_option('display.max_columns', None)
-    print(df_encoded)  # Replace 'df' with your DataFrame name
+    # Replace 'df' with your DataFrame name
     df_encoded = df_encoded.drop('Email Subject', axis = 1)
+    print(df_encoded)
 
 # Return the preprocessed features as a dictionary
     return {
