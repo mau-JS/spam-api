@@ -27,9 +27,6 @@ with open('word2vec_model.pkl', 'rb') as f:
     w2v = pickle.load(f)
 
 
-with open('model.pkl', 'rb') as file:
-    model = pickle.load(file)
-
 # Load the TLD_Freq data from the CSV file
 tld_data = pd.read_csv('tld_data_selected.csv')
 
