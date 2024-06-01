@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 import pickle
+import category_encoders as ce
 import numpy as np
 import pandas as pd
 from email.utils import parseaddr
@@ -12,6 +13,10 @@ with open('model.pkl', 'rb') as file:
 
 # Load the TLD_Freq data from the CSV file
 tld_data = pd.read_csv('tld_data_selected.csv')
+
+# Load the trained binary encoder (saved during training)
+with open('binary_encoder.pkl', 'rb') as file:
+    encoder = pickle.load(file)
 
 # Define your preprocessing function
 def preprocess_data(data):
@@ -42,11 +47,27 @@ def preprocess_data(data):
 
     # Calculate the length of the email address
     email_from_length = len(email_from)
+    
+# Explode the 'Attachment Extension' values
+    df_extension = pd.DataFrame({"Attachment Extension": attachment_extensions.split(",")})
+    df_dict = df_extension.to_dict(orient='records')
 
+# Return the preprocessed features as a dictionary
+    return {
+    'Attachment Count': attachment_count,
+    'Attachment Extensions': df_dict,
+    'Email Subject': email_subject,
+    'TLD_Freq': tld_freq,
+    'Email_From_Length': email_from_length
+    }
+    #df_extension = df_extension.explode("Attachment Extension")
+     # Apply binary encoding to the exploded extensions
+    #df_encoded_extension = encoder.transform(df_extension)
+     # Print the encoded DataFrame for inspection
     # Return the preprocessed features
     return {
         'Attachment Count': attachment_count,
-        'Attachment Extensions': attachment_extensions,
+        'Attachment Extensions': df_extension,
         'Email Subject': email_subject,
         'TLD_Freq': tld_freq,
         'Email_From_Length': email_from_length
