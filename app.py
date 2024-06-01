@@ -306,7 +306,7 @@ def preprocess():
         preprocessed_features = preprocess_data(data['features'])
 
         # Return preprocessed features (no prediction)
-        return jsonify({preprocessed_features})
+        return jsonify({'preprocessed_features': preprocessed_features})
 
     except Exception as e:
         return jsonify({'error': str(e)})
