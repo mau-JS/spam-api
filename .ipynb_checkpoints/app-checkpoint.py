@@ -26,6 +26,9 @@ app = Flask(__name__)
 with open('word2vec_model.pkl', 'rb') as f:
     w2v = pickle.load(f)
 
+with open('random_forest_model.pkl', 'rb') as model_file:
+    random_forest_model = pickle.load(model_file)
+
 
 # Load the TLD_Freq data from the CSV file
 tld_data = pd.read_csv('tld_data_selected.csv')
@@ -279,14 +282,15 @@ def preprocess_data(data):
     df_encoded = pd.concat([df_encoded, embedding_columns], axis=1)
     # Drop the original 'vectors' column
     df_encoded.drop(columns=['vectors'], inplace=True)
-    print(df_encoded)
-    print(df.columns.tolist())
+    #print(df_encoded)
+    #print(df_encoded.columns.tolist())
+
+    predictions = random_forest_model.predict(df_encoded)
+    print(predictions)
+    print(df_encoded.to_dict(orient = 'records'))
 # Return the preprocessed features as a dictionary
     return {
-    'Attachment Count': attachment_count,
-    'Email Subject': email_subject, # Assuming 'spam' is a predefined value
-    'Email_From_Length': email_from_length,
-    'TLD_Freq': tld_freq
+    'Preprocessed data': df_encoded.to_dict(orient = 'records')
     }
 
 
@@ -303,6 +307,22 @@ def preprocess():
 
         # Return preprocessed features (no prediction)
         return jsonify({'preprocessed_features': preprocessed_features})
+
+    except Exception as e:
+        return jsonify({'error': str(e)})
+
+@app.route('/predict', methods=['POST'])
+def predict():
+    try:
+        # Get data from POST request
+        data = request.get_json()
+
+        # Assuming you have a trained model (e.g., random_forest_model)
+        # Make predictions on the preprocessed features
+        predictions = random_forest_model.predict(data['preprocessed_features'])
+
+        # Return the predictions
+        return jsonify({'predictions': predictions.tolist()})
 
     except Exception as e:
         return jsonify({'error': str(e)})
