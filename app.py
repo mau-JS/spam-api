@@ -147,9 +147,15 @@ def preprocess_data(data):
 
     email_from = data.get('Email From', '')  # Handle missing 'Email From' gracefully
     tld = extract_tld(email_from)
+    
+    matching_rows = tld_data[tld_data['TLD'] == tld]
 
-    # Get the TLD_Freq corresponding to the extracted TLD
-    tld_freq = tld_data[tld_data['TLD'] == tld]['TLD_Freq'].values[0]
+    if not matching_rows.empty:
+        tld_freq = matching_rows['TLD_Freq'].values[0]
+    else:
+    # TLD not found, replace with the median frequency
+        median_tld_freq = tld_data['TLD_Freq'].median()
+        tld_freq = median_tld_freq
 
     # Calculate the length of the email address
     email_from_length = len(email_from)
@@ -170,6 +176,8 @@ def preprocess_data(data):
         df_new = df_api
     else:
         df_new = df_api
+
+    
     
 
 
