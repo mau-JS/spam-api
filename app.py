@@ -154,7 +154,7 @@ def preprocess_data(data):
         tld_freq = matching_rows['TLD_Freq'].values[0]
     else:
     # TLD not found, replace with the median frequency
-        median_tld_freq = tld_data['TLD_Freq'].median()
+        median_tld_freq = 0.07764940472699548
         tld_freq = median_tld_freq
 
     # Calculate the length of the email address
