@@ -33,10 +33,13 @@ with open('random_forest_model.pkl', 'rb') as model_file:
 # Load the TLD_Freq data from the CSV file
 tld_data = pd.read_csv('tld_data_selected.csv')
 
+
+    
 # Load the trained binary encoder (saved during training)
 with open('binary_encoder.pkl', 'rb') as file:
     encoder = pickle.load(file)
-    
+
+
 ###################################################
 #Natural Language Preprocessing functions
 def stopwordslist(languages):
@@ -118,6 +121,8 @@ def apply_get_vector(tokens_list, model):
         vector = get_vector(i, model)
         vector_list.append(vector)
     return vector_list
+
+
 
 ###################################################
 def preprocess_data(data):
@@ -289,21 +294,26 @@ def preprocess_data(data):
     #print(predictions)
     print(df_encoded.to_dict(orient = 'records'))
 # Return the preprocessed features as a dictionary
-    return {
-    'Preprocessed data': df_encoded.to_dict(orient = 'records')
-    }
+    return df_encoded
+    #'Preprocessed data': df_encoded.to_dict(orient = 'records')
+    
 
+def preprocess_to_dict(df_encoded):
+    return {'Preprocessed data': df_encoded.to_dict(orient = 'records')}
 
-
-
+def obtain_predictions(df_encoded):
+    predictions = random_forest_model.predict(df_encoded)
+    return predictions
+    
 @app.route('/preprocess', methods=['POST'])  # Changed route to /preprocess
 def preprocess():
     try:
         # Get data from POST request
         data = request.get_json()
-
+        df = preprocess_data(data['features'])
         # Preprocess the data
-        preprocessed_features = preprocess_data(data['features'])
+        
+        preprocessed_features = preprocess_to_dict(df)
 
         # Return preprocessed features (no prediction)
         return jsonify({'preprocessed_features': preprocessed_features})
@@ -316,28 +326,12 @@ def predict():
     try:
         # Get data from POST request
         data = request.get_json()
-
-        # Extract the preprocessed features
-        preprocessed_features = data['preprocessed_features']['Preprocessed data']
-
-        # Assuming you have a trained model (e.g., random_forest_model)
-        # Make predictions on the preprocessed features
-        predictions = random_forest_model.predict(preprocessed_features)
-
-        # Return the predictions
+        df = preprocess_data(data['features'])
+        predictions = obtain_predictions(df)
         return jsonify({'predictions': predictions.tolist()})
 
     except Exception as e:
         return jsonify({'error': str(e)})
-
-if __name__ == "__main__":
-    app.run(debug=True)
-
-
-if __name__ == "__main__":
-    app.run(debug=True)
-
-
 
 if __name__ == "__main__":
     app.run(debug=True)
