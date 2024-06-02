@@ -304,6 +304,14 @@ def preprocess_to_dict(df_encoded):
 def obtain_predictions(df_encoded):
     predictions = random_forest_model.predict(df_encoded)
     return predictions
+def calculate_majority_vote(predictions):
+    # Assuming binary predictions (0 or 1)
+    # Calculate the count of each prediction
+    counts = pd.Series(predictions).value_counts()
+    # Get the most frequent prediction (majority vote)
+    majority_vote = counts.idxmax()
+
+    return majority_vote
     
 @app.route('/preprocess', methods=['POST'])  # Changed route to /preprocess
 def preprocess():
@@ -333,5 +341,23 @@ def predict():
     except Exception as e:
         return jsonify({'error': str(e)})
 
+@app.route('/majority_vote', methods=['POST'])
+def majority_vote():
+    try:
+        # Get data from POST request
+        data = request.get_json()
+        df = preprocess_data(data['features'])
+        # Assuming you have already preprocessed the data and obtained 'df_encoded'
+        predictions = obtain_predictions(df)
+
+        # Calculate the majority vote
+        majority_vote = calculate_majority_vote(predictions)
+        majority_vote_serializable = int(majority_vote)
+
+        # Return the majority vote
+        return jsonify({'majority_vote': majority_vote_serializable})
+
+    except Exception as e:
+        return jsonify({'error': str(e)})
 if __name__ == "__main__":
     app.run(debug=True)
