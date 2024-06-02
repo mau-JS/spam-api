@@ -285,8 +285,8 @@ def preprocess_data(data):
     #print(df_encoded)
     #print(df_encoded.columns.tolist())
 
-    predictions = random_forest_model.predict(df_encoded)
-    print(predictions)
+    #predictions = random_forest_model.predict(df_encoded)
+    #print(predictions)
     print(df_encoded.to_dict(orient = 'records'))
 # Return the preprocessed features as a dictionary
     return {
@@ -317,15 +317,26 @@ def predict():
         # Get data from POST request
         data = request.get_json()
 
+        # Extract the preprocessed features
+        preprocessed_features = data['preprocessed_features']['Preprocessed data']
+
         # Assuming you have a trained model (e.g., random_forest_model)
         # Make predictions on the preprocessed features
-        predictions = random_forest_model.predict(data['preprocessed_features'])
+        predictions = random_forest_model.predict(preprocessed_features)
 
         # Return the predictions
         return jsonify({'predictions': predictions.tolist()})
 
     except Exception as e:
         return jsonify({'error': str(e)})
+
+if __name__ == "__main__":
+    app.run(debug=True)
+
+
+if __name__ == "__main__":
+    app.run(debug=True)
+
 
 
 if __name__ == "__main__":
