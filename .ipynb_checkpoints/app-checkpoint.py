@@ -154,9 +154,8 @@ def preprocess_data(data):
         tld_freq = matching_rows['TLD_Freq'].values[0]
     else:
     # TLD not found, replace with the median frequency
-        median_tld_freq = 0.07764940472699548
+        median_tld_freq = 0.06344250706880301
         tld_freq = median_tld_freq
-
     # Calculate the length of the email address
     email_from_length = len(email_from)
     spam = 'Spam'
