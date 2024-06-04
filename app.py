@@ -316,10 +316,8 @@ def obtain_predictions(df_encoded):
     
 def obtain_probs(df_encoded):
     predictions_probs = random_forest_model.predict_proba(df_encoded)
-    # Replace this with your actual model prediction
-    # For demonstration, I'm generating random probabilities
-    num_samples = df_encoded.shape[0]
     return predictions_probs
+    
 def calculate_majority_vote(predictions):
     # Assuming binary predictions (0 or 1)
     # Calculate the count of each prediction
