@@ -7,6 +7,7 @@ from email.utils import parseaddr
 import re
 import emoji
 from wordcloud import WordCloud
+from sklearn.ensemble import RandomForestClassifier
 from nltk.corpus import PlaintextCorpusReader, stopwords, wordnet as wn
 from nltk.tokenize import sent_tokenize, word_tokenize
 from nltk.stem import WordNetLemmatizer, PorterStemmer
@@ -312,6 +313,11 @@ def preprocess_to_dict(df_encoded):
 def obtain_predictions(df_encoded):
     predictions = random_forest_model.predict(df_encoded)
     return predictions
+
+def obtain_probs(df_encoded):
+    predictions_probs = random_forest_model.predict_proba(df_encoded)
+    return predictions_probs
+    
 def calculate_majority_vote(predictions):
     # Assuming binary predictions (0 or 1)
     # Calculate the count of each prediction
@@ -345,6 +351,18 @@ def predict():
         df = preprocess_data(data['features'])
         predictions = obtain_predictions(df)
         return jsonify({'predictions': predictions.tolist()})
+
+    except Exception as e:
+        return jsonify({'error': str(e)})
+
+@app.route('/predict_probs', methods=['POST'])
+def predict_probs():
+    try:
+        # Get data from POST request
+        data = request.get_json()
+        df = preprocess_data(data['features'])
+        predictions_probs = obtain_probs(df)
+        return jsonify({'predictions probabilities': predictions_probs.tolist()})
 
     except Exception as e:
         return jsonify({'error': str(e)})
