@@ -313,15 +313,13 @@ def preprocess_to_dict(df_encoded):
 def obtain_predictions(df_encoded):
     predictions = random_forest_model.predict(df_encoded)
     return predictions
-
+    
 def obtain_probs(df_encoded):
+    predictions_probs = random_forest_model.predict_proba(df_encoded)
     # Replace this with your actual model prediction
     # For demonstration, I'm generating random probabilities
     num_samples = df_encoded.shape[0]
-    predictions_probs = np.random.rand(num_samples, 2)
     return predictions_probs
-
-    
 def calculate_majority_vote(predictions):
     # Assuming binary predictions (0 or 1)
     # Calculate the count of each prediction
@@ -359,17 +357,34 @@ def predict():
     except Exception as e:
         return jsonify({'error': str(e)})
 
-@app.route('/predict_probs', methods=['POST'])
+@app.route('/predict_prob', methods=['POST'])
 def predict_probs():
     try:
         # Get data from POST request
         data = request.get_json()
-        df = preprocess_data(data['features'])
+        df = preprocess_data(data['features'])  # Replace with your preprocessing logic
         predictions_probs = obtain_probs(df)
-        return jsonify({'predictions probabilities': predictions_probs.tolist()})
+
+        # Obtain binary predictions (0 or 1)
+        predictions = (predictions_probs[:, 1] > 0.5).astype(int)
+
+        # Calculate majority vote
+        winning_class = 1 if sum(predictions) > len(predictions) / 2 else 0
+
+        # Filter winning probabilities
+        winning_probs = predictions_probs[predictions == 1, 1]
+
+        # Calculate mean of winning probabilities
+        mean_winning_prob = winning_probs.mean()
+
+        return jsonify({
+            'winning_class': winning_class,
+            'winning_prob': mean_winning_prob
+        })
 
     except Exception as e:
         return jsonify({'error': str(e)})
+
 
 
 @app.route('/majority_vote', methods=['POST'])
@@ -391,30 +406,5 @@ def majority_vote():
     except Exception as e:
         return jsonify({'error': str(e)})
 
-@app.route('/winning_probability', methods=['POST'])
-def new_predict():
-    try:
-        # Get data from POST request
-        data = request.get_json()
-        df = preprocess_data(data['features'])  # Replace with your preprocessing logic
-        predictions_probs = obtain_probs(df)
-
-        # Obtain binary predictions (0 or 1)
-        predictions = (predictions_probs[:, 1] > 0.5).astype(int)
-
-        # Calculate majority vote
-        winning_class = 1 if sum(predictions) > len(predictions) / 2 else 0
-
-        # Calculate mean of winning probabilities
-        winning_probs = predictions_probs[:, 1]
-        mean_winning_prob = winning_probs.mean()
-
-        return jsonify({
-            'winning_class': winning_class,
-            'winning_probability': mean_winning_prob
-        })
-
-    except Exception as e:
-        return jsonify({'error': str(e)})
 if __name__ == "__main__":
     app.run(debug=True)
