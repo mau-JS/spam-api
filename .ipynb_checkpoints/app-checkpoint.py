@@ -326,7 +326,7 @@ def calculate_majority_vote(predictions):
     majority_vote = counts.idxmax()
 
     return majority_vote
-    
+#Change
 @app.route('/preprocess', methods=['POST'])  # Changed route to /preprocess
 def preprocess():
     try:
