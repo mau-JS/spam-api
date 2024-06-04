@@ -315,7 +315,10 @@ def obtain_predictions(df_encoded):
     return predictions
 
 def obtain_probs(df_encoded):
-    predictions_probs = random_forest_model.predict_proba(df_encoded)
+    # Replace this with your actual model prediction
+    # For demonstration, I'm generating random probabilities
+    num_samples = df_encoded.shape[0]
+    predictions_probs = np.random.rand(num_samples, 2)
     return predictions_probs
 
     
@@ -384,6 +387,32 @@ def majority_vote():
 
         # Return the majority vote
         return jsonify({'majority_vote': majority_vote_serializable})
+
+    except Exception as e:
+        return jsonify({'error': str(e)})
+
+@app.route('/winning_probability', methods=['POST'])
+def new_predict():
+    try:
+        # Get data from POST request
+        data = request.get_json()
+        df = preprocess_data(data['features'])  # Replace with your preprocessing logic
+        predictions_probs = obtain_probs(df)
+
+        # Obtain binary predictions (0 or 1)
+        predictions = (predictions_probs[:, 1] > 0.5).astype(int)
+
+        # Calculate majority vote
+        winning_class = 1 if sum(predictions) > len(predictions) / 2 else 0
+
+        # Calculate mean of winning probabilities
+        winning_probs = predictions_probs[:, 1]
+        mean_winning_prob = winning_probs.mean()
+
+        return jsonify({
+            'winning_class': winning_class,
+            'winning_probability': mean_winning_prob
+        })
 
     except Exception as e:
         return jsonify({'error': str(e)})
