@@ -314,10 +314,9 @@ def obtain_predictions(df_encoded):
     predictions = random_forest_model.predict(df_encoded)
     return predictions
 
-def obtain_highest_probabilities(df_encoded):
-    prediction_probs = random_forest_model.predict_proba(df_encoded)
-    highest_probs = prediction_probs.max(axis=1)  # Maximum probability for each instance
-    return highest_probs
+def obtain_probs(df_encoded):
+    predictions_probs = random_forest_model.predict_proba(df_encoded)
+    return predictions_probs
 
     
 def calculate_majority_vote(predictions):
@@ -363,8 +362,8 @@ def predict_probs():
         # Get data from POST request
         data = request.get_json()
         df = preprocess_data(data['features'])
-        highest_probs = obtain_highest_probabilities(df)  # Modify this line
-        return jsonify({'highest_probabilities': highest_probs.tolist()})
+        predictions_probs = obtain_probs(df)
+        return jsonify({'predictions probabilities': predictions_probs.tolist()})
 
     except Exception as e:
         return jsonify({'error': str(e)})
