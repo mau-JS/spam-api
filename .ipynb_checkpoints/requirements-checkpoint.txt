@@ -11,6 +11,3 @@ scipy==1.10.1
 seaborn==0.13.2
 tensorflow
 wordcloud==1.9.3
-flask-restful
-flasgger
-flask-cors

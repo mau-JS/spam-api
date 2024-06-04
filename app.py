@@ -1,5 +1,4 @@
 from flask import Flask, request, jsonify
-from flask_cors import CORS
 import pickle
 import category_encoders as ce
 import numpy as np
@@ -7,8 +6,6 @@ import pandas as pd
 from email.utils import parseaddr
 import re
 import emoji
-from flasgger import Swagger, swag_from
-import traceback
 from wordcloud import WordCloud
 from sklearn.ensemble import RandomForestClassifier
 from nltk.corpus import PlaintextCorpusReader, stopwords, wordnet as wn
@@ -26,8 +23,6 @@ nltk.download('averaged_perceptron_tagger')
 
 
 app = Flask(__name__)
-CORS(app)
-swagger = Swagger(app)
 
 with open('word2vec_model.pkl', 'rb') as f:
     w2v = pickle.load(f)
@@ -333,60 +328,6 @@ def calculate_majority_vote(predictions):
     return majority_vote
 #Change
 @app.route('/preprocess', methods=['POST'])  # Changed route to /preprocess
-@swag_from({
-    'summary': 'Preprocess features',
-    'tags': ['Preprocess'],
-    'parameters': [
-        {
-            'name': 'body',
-            'in': 'body',
-            'required': True,
-            'schema': {
-                'type': 'object',
-                'properties': {
-                    'features': {
-                        'type': 'object',
-                        'properties': {
-                            'Attachment Count': {
-                                'type': 'integer',
-                                'example': 5
-                            },
-                            'Attachment Extension': {
-                                'type': 'string',
-                                'example': 'png,png,png,png,png'
-                            },
-                            'Email From': {
-                                'type': 'string',
-                                'example': 'Nancy Wake <nancy.wake@medius-group.org>'
-                            },
-                            'Email Subject': {
-                                'type': 'string',
-                                'example': 'RE: Let’s schedule a time to chat - Vaishnavi'
-                            }
-                        },
-                        'required': ['Attachment Count', 'Attachment Extension', 'Email From', 'Email Subject']
-                    }
-                }
-            }
-        }
-    ],
-    'responses': {
-        200: {
-            'description': 'Preprocessed features',
-            'schema': {
-                'type': 'object',
-                'properties': {
-                    'preprocessed_features': {
-                        'type': 'object'
-                    }
-                }
-            }
-        },
-        500: {
-            'description': 'Internal Server Error'
-        }
-    }
-})
 def preprocess():
     try:
         # Get data from POST request
@@ -403,143 +344,18 @@ def preprocess():
         return jsonify({'error': str(e)})
 
 @app.route('/predict', methods=['POST'])
-@swag_from({
-    'summary': 'Get predictions',
-    'tags': ['Predict'],
-    'parameters': [
-        {
-            'name': 'body',
-            'in': 'body',
-            'required': True,
-            'schema': {
-                'type': 'object',
-                'properties': {
-                    'features': {
-                        'type': 'object',
-                        'properties': {
-                            'Attachment Count': {
-                                'type': 'integer',
-                                'example': 5
-                            },
-                            'Attachment Extension': {
-                                'type': 'string',
-                                'example': 'png,png,png,png,png'
-                            },
-                            'Email From': {
-                                'type': 'string',
-                                'example': 'Nancy Wake <nancy.wake@medius-group.com>'
-                            },
-                            'Email Subject': {
-                                'type': 'string',
-                                'example': 'RE: Let’s schedule a time to chat - Vaishnavi'
-                            }
-                        },
-                        'required': ['Attachment Count', 'Attachment Extension', 'Email From', 'Email Subject']
-                    }
-                }
-            }
-        }
-    ],
-    'responses': {
-        200: {
-            'description': 'Predictions',
-            'schema': {
-                'type': 'object',
-                'properties': {
-                    'predictions': {
-                        'type': 'array',
-                        'items': {
-                            'type': 'number'
-                        }
-                    }
-                }
-            }
-        },
-        500: {
-            'description': 'Internal Server Error'
-        }
-    }
-})
 def predict():
     try:
         # Get data from POST request
         data = request.get_json()
-        
-        # Check if 'features' field is present in the request
-
-        
-        # Preprocess the data
         df = preprocess_data(data['features'])
-        
-        # Obtain predictions
         predictions = obtain_predictions(df)
-        
-        # Return predictions
         return jsonify({'predictions': predictions.tolist()})
 
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
+        return jsonify({'error': str(e)})
 
 @app.route('/predict_prob', methods=['POST'])
-@swag_from({
-    'summary': 'Get probabilities and majority vote',
-    'tags': ['PredictProbs'],
-    'parameters': [
-        {
-            'name': 'body',
-            'in': 'body',
-            'required': True,
-            'schema': {
-                'type': 'object',
-                'properties': {
-                    'features': {
-                        'type': 'object',
-                        'properties': {
-                            'Attachment Count': {
-                                'type': 'integer',
-                                'example': 5
-                            },
-                            'Attachment Extension': {
-                                'type': 'string',
-                                'example': 'jpg,png,png,png,png'
-                            },
-                            'Email From': {
-                                'type': 'string',
-                                'example': 'Nancy Wake <nancy.wake@medius-group.com>'
-                            },
-                            'Email Subject': {
-                                'type': 'string',
-                                'example': 'RE: Let’s schedule a time to chat - Vaishnavi'
-                            }
-                        },
-                        'required': ['Attachment Count', 'Attachment Extension', 'Email From', 'Email Subject']
-                    }
-                }
-            }
-        }
-    ],
-    'responses': {
-        200: {
-            'description': 'Probabilities and majority vote',
-            'schema': {
-                'type': 'object',
-                'properties': {
-                    'winning_class': {
-                        'type': 'integer'
-                    },
-                    'winning_prob': {
-                        'type': 'number'
-                    }
-                }
-            }
-        },
-        500: {
-            'description': 'Internal Server Error'
-        }
-
-    }
-})
 def predict_probs():
     try:
         # Get data from POST request
@@ -570,60 +386,6 @@ def predict_probs():
 
 
 @app.route('/majority_vote', methods=['POST'])
-@swag_from({
-    'summary': 'Get majority vote',
-    'tags': ['MajorityVote'],
-    'parameters': [
-        {
-            'name': 'body',
-            'in': 'body',
-            'required': True,
-            'schema': {
-                'type': 'object',
-                'properties': {
-                    'features': {
-                        'type': 'object',
-                        'properties': {
-                            'Attachment Count': {
-                                'type': 'integer',
-                                'example': 5
-                            },
-                            'Attachment Extension': {
-                                'type': 'string',
-                                'example': 'jpg,png,png,png,png'
-                            },
-                            'Email From': {
-                                'type': 'string',
-                                'example': 'Nancy Wake <nancy.wake@medius-group.com>'
-                            },
-                            'Email Subject': {
-                                'type': 'string',
-                                'example': 'RE: Let’s schedule a time to chat - Vaishnavi'
-                            }
-                        },
-                        'required': ['Attachment Count', 'Attachment Extension', 'Email From', 'Email Subject']
-                    }
-                }
-            }
-        }
-    ],
-    'responses': {
-        200: {
-            'description': 'Majority vote',
-            'schema': {
-                'type': 'object',
-                'properties': {
-                    'majority_vote': {
-                        'type': 'integer'
-                    }
-                }
-            }
-        },
-        500: {
-            'description': 'Internal Server Error'
-        }
-    }
-})
 def majority_vote():
     try:
         # Get data from POST request
