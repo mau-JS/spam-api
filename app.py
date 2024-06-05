@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 from email.utils import parseaddr
 import re
+import io
 import emoji
 from wordcloud import WordCloud
 from sklearn.ensemble import RandomForestClassifier
@@ -33,13 +34,6 @@ with open('random_forest_model.pkl', 'rb') as model_file:
 
 # Load the TLD_Freq data from the CSV file
 tld_data = pd.read_csv('tld_data_selected.csv')
-
-
-    
-# Load the trained binary encoder (saved during training)
-with open('binary_encoder.pkl', 'rb') as file:
-    encoder = pickle.load(file)
-
 
 ###################################################
 #Natural Language Preprocessing functions
@@ -132,7 +126,6 @@ def preprocess_data(data):
     attachment_extensions = data['Attachment Extension']  # Keep it as a raw string
     email_subject = data['Email Subject']
 
-        # Convert 'Attachment Count' to integer (handle non-numeric values)
     try:
         attachment_count = int(attachment_count)
     except ValueError:
@@ -169,32 +162,14 @@ def preprocess_data(data):
         'TLD_Freq': [tld_freq]
     })
 
-    if attachment_count > 0 and attachment_extensions != "":
-        df_new = pd.DataFrame(np.repeat(df_api.values, attachment_count, axis=0))
-        df_new.columns = df_api.columns
-
-    elif attachment_count > 0 and attachment_extensions == "":
-        df_new = df_api
-    else:
-        df_new = df_api
-
-    
-    
-
-
-    df_extension = pd.DataFrame({"Attachment Extension": attachment_extensions.split(",")})
-    # Create a DataFrame with a single row for the 'Attachment Extension'
-    merged_df = pd.concat([df_new, df_extension], axis=1)
+    pd.set_option('display.max_columns', None)
     # Display the merged DataFrame
     #print(merged_df)
     # Apply binary encoding to the 'Attachment Extension'
-    df_encoded = encoder.transform(merged_df)
-    df_encoded = df_encoded[['Attachment Count','Attachment Extension_0','Attachment Extension_1','Attachment Extension_2','Attachment Extension_3','Attachment Extension_4',
-                             'Attachment Extension_5','Attachment Extension_6','Attachment Extension_7','Email Subject','Email_From_Length','TLD_Freq']]
+    df_encoded = df_api[['Attachment Count','Email Subject','Email_From_Length','TLD_Freq']]
     df = df_encoded
 
-
-    #print(df_encoded)
+    #ALL CORRECT BEFORE THIS
 ####################################################
     #Natural Language Preprocessing for Email Subject
     corpus_subject = df_encoded['Email Subject']
@@ -204,7 +179,7 @@ def preprocess_data(data):
     stopW = stopwordslist(languages)
     corpus_subject = corpus_subject.astype(str)
     tokens = corpus_subject.apply(tokenize_text)
-    #print(tokens)
+  
     
     df_frequency= []
     frequency_original = []
@@ -245,7 +220,7 @@ def preprocess_data(data):
         bigram_get = bigram_relation(frequency_cleaned,i)
         bigrams_cleaned.append(bigram_get)
 
-    #print(lematized)
+
     #####Corpus Extraction
     size_vector = 100
     context_max = 35
@@ -256,37 +231,25 @@ def preprocess_data(data):
     for i in lematized:
         unique_token.extend(i)
 
-    #print("Number of unique words in the input data: ",len(unique_token))
-
-    #w2v = word2vec.Word2Vec(sentences=[unique_token],
-     #                   vector_size=size_vector,
-      #                  window=context_max,
-       #                 min_count=min_presence,
-        #                epochs=epochs,
-         #               sg=1
-          #             )
     vectors = apply_get_vector(lematized, w2v)
 
     lematized_df = pd.DataFrame({'lematized': lematized})
     corpus_subject.reset_index(drop=True, inplace=True)
     corpus_subject = pd.concat([corpus_subject, lematized_df], axis=1)
-    #print(corpus_subject)
+
     
     
     if(len(vectors) > len(lematized)):
         vectors = vectors[:1]
     corpus_subject['vectors'] = vectors
-    #print(len(lematized))
-    #print(len(vectors))
-    #print(corpus_subject)
+
 
     df_encoded = df.join(corpus_subject['vectors'].set_axis(df.index))
     #print(df_encoded)
 
-    pd.set_option('display.max_columns', None)
     # Replace 'df' with your DataFrame name
     df_encoded = df_encoded.drop('Email Subject', axis = 1)
-    #print(df_encoded)
+
 
     # Assuming 'vectors' contains embedding vectors
     n_components = len(df_encoded['vectors'][0])  # Get the number of components
@@ -296,16 +259,8 @@ def preprocess_data(data):
     df_encoded = pd.concat([df_encoded, embedding_columns], axis=1)
     # Drop the original 'vectors' column
     df_encoded.drop(columns=['vectors'], inplace=True)
-    #print(df_encoded)
-    #print(df_encoded.columns.tolist())
-
-    #predictions = random_forest_model.predict(df_encoded)
-    #print(predictions)
-    print(df_encoded.to_dict(orient = 'records'))
-# Return the preprocessed features as a dictionary
     return df_encoded
-    #'Preprocessed data': df_encoded.to_dict(orient = 'records')
-    
+
 
 def preprocess_to_dict(df_encoded):
     return {'Preprocessed data': df_encoded.to_dict(orient = 'records')}
@@ -363,46 +318,47 @@ def predict_probs():
         df = preprocess_data(data['features'])  # Replace with your preprocessing logic
         predictions_probs = obtain_probs(df)
 
-        # Obtain binary predictions (0 or 1)
-        predictions = (predictions_probs[:, 1] > 0.5).astype(int)
-
-        # Calculate majority vote
-        winning_class = 1 if sum(predictions) > len(predictions) / 2 else 0
-
-        # Filter winning probabilities
-        winning_probs = predictions_probs[predictions == 1, 1]
-
-        # Calculate mean of winning probabilities
-        mean_winning_prob = winning_probs.mean()
+        # Determine the winning class (highest probability)
+        winning_class = int(predictions_probs.argmax(axis=1)[0])
+        winning_prob = float(predictions_probs.max(axis=1)[0])
 
         return jsonify({
             'winning_class': winning_class,
-            'winning_prob': mean_winning_prob
+            'winning_prob': winning_prob
         })
 
     except Exception as e:
         return jsonify({'error': str(e)})
 
-
-
-@app.route('/majority_vote', methods=['POST'])
-def majority_vote():
+@app.route('/predict_prob_from_csv', methods=['POST'])
+def predict_prob_from_csv():
     try:
-        # Get data from POST request
-        data = request.get_json()
-        df = preprocess_data(data['features'])
-        # Assuming you have already preprocessed the data and obtained 'df_encoded'
-        predictions = obtain_predictions(df)
+        # Get the uploaded file from the request
+        file = request.files['file']
+        
+        # Read the CSV file into a DataFrame
+        df = pd.read_csv(io.StringIO(file.stream.read().decode('utf-8')))
+        
+        # Preprocess each row in the DataFrame
+        results = []
+        for _, row in df.iterrows():
+            features = row.to_dict()
+            preprocessed_df = preprocess_data(features)  
+            predictions_probs = obtain_probs(preprocessed_df)
 
-        # Calculate the majority vote
-        majority_vote = calculate_majority_vote(predictions)
-        majority_vote_serializable = int(majority_vote)
+            # Determine the winning class and its probability
+            winning_class = int(predictions_probs.argmax(axis=1)[0])
+            winning_prob = float(predictions_probs.max(axis=1)[0])
 
-        # Return the majority vote
-        return jsonify({'majority_vote': majority_vote_serializable})
+            results.append({
+                'features': features,
+                'winning_class': winning_class,
+                'winning_prob': winning_prob
+            })
 
+        return jsonify(results)
     except Exception as e:
-        return jsonify({'error': str(e)})
-
+        return jsonify({'error': str(e)}), 400
+        
 if __name__ == "__main__":
     app.run(debug=True)
