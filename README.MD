@@ -7,6 +7,13 @@ However, I am able to share the preprocessing pipeline, which outlines the neces
 
 This project was developed in collaboration with **Beiersdorf AG**. The API was implemented using **Flask** and deployed with **Azure App Services**, a backend cloud service provided by Azure. By leveraging Azure's **CI/CD capabilities integrated with GitHub**, automatic updates were applied, enabling seamless tracking and implementation of necessary changes. This api was created in such a way that it was able to receive CSV files and return a prediction.  
 
+Resources were are all given by the company and as such I no longer access to any related Azure service specific to  the project: Azure App Services, Azure VMs.
+
+## Requirements
+* For this code to work it needs Python 3.8, as Gensim library reaches up to 3.9 Python compatibility.
+* Azure App Service deployment, unfortunately access to this service is not longer granted. It is really important you azure app service applications have the previous Python version.
+* requirements.txt so libraries needed are installed into Azure App Services and everything can run properly.
+
 ## Features
 * Attachment Count
 * Email Length
@@ -44,3 +51,6 @@ Created a total of 3 APIs:
 #### API that returns a prediction given a CSV file.  
 
 ![Azure App Services](./images/azure_app_services.png "Azure App Services")  
+
+### Endpoints
+![Endpoints](./images/endpoints.png "Endpoints")  
