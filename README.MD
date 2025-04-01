@@ -47,8 +47,8 @@ We used the following:
 * Support Vector Machine
 * Random Forest
 * Gradient Boosting
-* CNN
-* RNN
+* CNN (Convolutional Neural Networks)
+* RNN (Recurrent Neural Networks)
 
 For a complete overview look at the following created article:
 [Complete Project Documentation](./docs/scientific_article.pdf)
