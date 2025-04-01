@@ -7,11 +7,12 @@ However, I am able to share the preprocessing pipeline, which outlines the neces
 
 This project was developed in collaboration with **Beiersdorf AG**. The API was implemented using **Flask** and deployed with **Azure App Services**, a backend cloud service provided by Azure. By leveraging Azure's **CI/CD capabilities integrated with GitHub**, automatic updates were applied, enabling seamless tracking and implementation of necessary changes. This api was created in such a way that it was able to receive CSV files and return a prediction.  
 
-Resources were are all given by the company and as such I no longer access to any related Azure service specific to  the project: Azure App Services, Azure VMs.
+### Azure Access Status
+Since all resources for this project were provided by **Beiersdorf AG**, I no longer have access to any related Azure services (including Azure App Services and Azure VMs). As a result, GitHub CI/CD integration displays an inactive status.
 
 ## Requirements
 * For this code to work it needs Python 3.8, as Gensim library reaches up to 3.9 Python compatibility.
-* Azure App Service deployment, unfortunately access to this service is not longer granted. It is really important you azure app service applications have the previous Python version.
+* Azure App Service deployment, unfortunately, access to this service is not longer granted. It is really important you azure app service applications have the previous Python version.
 * requirements.txt so libraries needed are installed into Azure App Services and everything can run properly.
 
 ## Features
@@ -20,6 +21,7 @@ Resources were are all given by the company and as such I no longer access to an
 * Email Subject
 * Top level domain
 * Email Subject
+
 ## NLP Preprocessing
 We used nltk, gensim, and wordcloud. We also used email.utils to find common domains.
 * We obtained the Top level Domain frequency to use it as a feature.
@@ -32,9 +34,13 @@ We used nltk, gensim, and wordcloud. We also used email.utils to find common dom
 * We extract top level domain as a feature from email data.
 
 ### Word Embedding
-* Obtained a numerical vector representation for the list of token using pre-trained Word2Vec model.
-* If a vector is empty, none of the tokens were in the model's vocabulary. In this case it returns a vector of zeros.
-* Creating a new dataframe with all updated features: **Attachment Count**, **Email Length**, **Top Level Domain Frequency**, **embeddings** (obtained with one hot labeling).
+* Transformed tokens into numerical vector representations using a pre-trained **Word2Vec** model.
+* If a token was absent in the model's vocabulary, a zero vector was returned as a fallback.
+* Constructed a DataFrame incorporating features such as:
+  - **Attachment Count**
+  - **Email Length**
+  - **Top-Level Domain Frequency**
+  - **Word Embeddings (One-Hot Encoding)**
 
 ### Modeling
 We used the following:
@@ -44,11 +50,15 @@ We used the following:
 * CNN
 * RNN
 
+For a complete overview look at the following created article:
+[Complete Project Documentation](./docs/scientific_article.pdf)
+
+
 ### API Implementation
-Created a total of 3 APIs:
-#### API that returns the prediction by receiving the features  
-#### API that returns the prediction probability by receiving the features  
-#### API that returns a prediction given a CSV file.  
+Developed three API endpoints:
+1. **Prediction API** – Accepts feature inputs and returns a classification result.
+2. **Probability API** – Accepts feature inputs and returns class probabilities.
+3. **CSV-Based Prediction API** – Processes a CSV file, applying predictions to all entries.
 
 ![Azure App Services](./images/azure_app_services.png "Azure App Services")  
 
