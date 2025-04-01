@@ -1,7 +1,7 @@
 # Spam Detection Project
 
 ## Initial Notes
-Due to NDA restrictions, I am unable to share details related to the model training process, as it involves sensitive company data. Sharing such information would violate NDA rules and could have serious consequences.  
+Due to NDA restrictions, We am unable to share details related to the model training process, as it involves sensitive company data. Sharing such information would violate NDA rules and could have serious consequences.  
 
 However, I am able to share the preprocessing pipeline, which outlines the necessary steps for preparing data for NLP tasks. Please note that no datasets are included in this shared code.  
 
