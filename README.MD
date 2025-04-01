@@ -62,5 +62,6 @@ Developed three API endpoints:
 
 ![Azure App Services](./images/azure_app_services.png "Azure App Services")  
 
+
 ### Endpoints
 ![Endpoints](./images/endpoints.png "Endpoints")  
